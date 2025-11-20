@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 01: 基本的なクッキーの仕組み</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(250, 112, 154, 0.4);
+        }
+
+        .output {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .output.error {
+            border-left-color: #f5576c;
+            background: #fee;
+            color: #c00;
+        }
+
+        .output.success {
+            border-left-color: #28a745;
+            background: #e8f5e9;
+            color: #155724;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+            margin-top: 15px;
+        }
+
+        .info-box h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .cookie-display {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin-top: 15px;
+        }
+
+        .cookie-display h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .cookie-item {
+            background: white;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍪 Lesson 01: 基本的なクッキーの仕組み</h1>
+            <p class="subtitle">HTTP クッキーの設定、読み取り、削除を体験しよう</p>
+        </div>
+
+        <!-- クッキー設定 -->
+        <div class="card">
+            <h2>📝 クッキーの設定</h2>
+            <div class="input-group">
+                <label for="username">ユーザー名:</label>
+                <input type="text" id="username" placeholder="例: alice" value="alice">
+            </div>
+            <div class="input-group">
+                <label for="theme">テーマ:</label>
+                <input type="text" id="theme" placeholder="例: dark" value="dark">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="setCookie()">🍪 クッキーを設定</button>
+                <button class="btn-secondary" onclick="demoAttributes()">🎭 属性デモ</button>
+            </div>
+            <div id="set-output" class="output" style="display:none;"></div>
+        </div>
+
+        <!-- クッキー読み取り -->
+        <div class="card">
+            <h2>📖 クッキーの読み取り</h2>
+            <div class="button-group">
+                <button class="btn-primary" onclick="getCookie()">📖 サーバーから取得</button>
+                <button class="btn-secondary" onclick="getClientCookie()">🌐 ブラウザから取得</button>
+            </div>
+            <div id="get-output" class="output" style="display:none;"></div>
+        </div>
+
+        <!-- クッキー削除 -->
+        <div class="card">
+            <h2>🗑️ クッキーの削除</h2>
+            <div class="button-group">
+                <button class="btn-danger" onclick="clearCookie()">🗑️ すべてのクッキーを削除</button>
+            </div>
+            <div id="clear-output" class="output" style="display:none;"></div>
+        </div>
+
+        <!-- リアルタイムクッキー表示 -->
+        <div class="card">
+            <h2>🔍 現在のクッキー（JavaScript から見える）</h2>
+            <div class="cookie-display">
+                <h3>document.cookie の内容:</h3>
+                <div id="cookie-display" class="cookie-item">クッキーなし</div>
+            </div>
+            <div class="info-box">
+                <h3>💡 重要なポイント:</h3>
+                <ul>
+                    <li><code>HttpOnly</code> 属性が設定されたクッキーは JavaScript から読み取れません</li>
+                    <li>ブラウザの開発者ツール（F12）→ Application → Cookies で確認できます</li>
+                    <li>Network タブで <code>Set-Cookie</code> ヘッダーを確認できます</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 学習ポイント -->
+        <div class="card">
+            <h2>📚 学習ポイント</h2>
+            <div class="info-box">
+                <h3>このレッスンで学べること:</h3>
+                <ul>
+                    <li><strong>クッキーの基本</strong>: クッキーはサーバーからブラウザに送信される小さなデータ</li>
+                    <li><strong>自動送信</strong>: ブラウザは自動的にクッキーを同じサーバーに送り返す</li>
+                    <li><strong>属性</strong>: MaxAge, HttpOnly, Secure, SameSite などの重要な属性</li>
+                    <li><strong>制限</strong>: 1つのクッキーは約 4KB まで、ドメインごとに制限あり</li>
+                </ul>
+            </div>
+            <div class="info-box" style="margin-top: 15px;">
+                <h3>🔍 確認してみよう:</h3>
+                <ul>
+                    <li>F12 キーを押して開発者ツールを開く</li>
+                    <li><strong>Application タブ</strong> → Storage → Cookies → localhost:3001</li>
+                    <li><strong>Network タブ</strong> → リクエストを選択 → Headers → Response Headers の Set-Cookie</li>
+                    <li><strong>Console タブ</strong> → <code>document.cookie</code> を実行</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // クッキーを設定
+        async function setCookie() {
+            const username = document.getElementById('username').value || 'guest';
+            const theme = document.getElementById('theme').value || 'light';
+            const output = document.getElementById('set-output');
+
+            try {
+                const response = await fetch(`/api/set-cookie?username=${encodeURIComponent(username)}&theme=${encodeURIComponent(theme)}`);
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2);
+
+                updateCookieDisplay();
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        // クッキーを取得（サーバーから）
+        async function getCookie() {
+            const output = document.getElementById('get-output');
+
+            try {
+                const response = await fetch('/api/get-cookie');
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2);
+
+                updateCookieDisplay();
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        // クッキーを取得（クライアントから）
+        function getClientCookie() {
+            const output = document.getElementById('get-output');
+            const cookies = document.cookie;
+
+            output.style.display = 'block';
+            output.className = 'output success';
+
+            if (!cookies) {
+                output.textContent = 'ブラウザに保存されているクッキーはありません\n（または全て HttpOnly です）';
+                return;
+            }
+
+            const cookieObj = {};
+            cookies.split(';').forEach(cookie => {
+                const [name, value] = cookie.trim().split('=');
+                cookieObj[name] = decodeURIComponent(value);
+            });
+
+            output.textContent = 'document.cookie から取得:\n\n' + JSON.stringify(cookieObj, null, 2);
+        }
+
+        // クッキーを削除
+        async function clearCookie() {
+            const output = document.getElementById('clear-output');
+
+            try {
+                const response = await fetch('/api/clear-cookie');
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2);
+
+                updateCookieDisplay();
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        // クッキー属性デモ
+        async function demoAttributes() {
+            const output = document.getElementById('set-output');
+
+            try {
+                const response = await fetch('/api/demo/cookie-attributes');
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2) +
+                    '\n\n開発者ツール（F12）→ Application → Cookies で確認してください！';
+
+                updateCookieDisplay();
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        // リアルタイムでクッキーを表示
+        function updateCookieDisplay() {
+            const display = document.getElementById('cookie-display');
+            const cookies = document.cookie;
+
+            if (!cookies) {
+                display.textContent = 'クッキーなし（または全て HttpOnly）';
+                display.style.background = '#f5f5f5';
+                return;
+            }
+
+            display.textContent = cookies;
+            display.style.background = 'white';
+        }
+
+        // ページ読み込み時にクッキーを表示
+        updateCookieDisplay();
+
+        // 1秒ごとにクッキー表示を更新
+        setInterval(updateCookieDisplay, 1000);
+    </script>
+</body>
+</html>

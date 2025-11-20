@@ -1,0 +1,41 @@
+{
+  "name": "cookie-session-demo",
+  "version": "1.0.0",
+  "description": "Cookie-based session management curriculum with step-by-step examples",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "lesson01": "node lessons/01-basic-cookies/server.js",
+    "lesson02": "node lessons/02-simple-session/server.js",
+    "lesson03": "node lessons/03-encrypted-session/server.js",
+    "lesson04": "node lessons/04-session-expiration/server.js",
+    "lesson05": "node lessons/05-secure-cookies/server.js",
+    "lesson06": "node lessons/06-refresh-tokens/server.js",
+    "lesson07": "node lessons/07-jwt-session/server.js",
+    "lesson08": "node lessons/08-session-store/server.js"
+  },
+  "keywords": [
+    "cookie",
+    "session",
+    "authentication",
+    "jwt",
+    "security",
+    "tutorial",
+    "curriculum"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cookie-parser": "^1.4.6",
+    "cookie-session": "^2.0.0",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^9.0.2",
+    "connect-redis": "^7.1.0",
+    "redis": "^4.6.10",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
