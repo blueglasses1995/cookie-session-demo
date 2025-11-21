@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Lesson 07</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 20px; }
+        h1 { color: #333; margin-bottom: 10px; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #ddd; border-radius: 5px; }
+        button { padding: 12px 24px; margin: 5px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .output { background: #f5f5f5; padding: 15px; margin-top: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; border-left: 4px solid #667eea; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Lesson 07</h1>
+        <p>詳細は README.md を参照してください</p>
+    </div>
+    <div class="card">
+        <h2>ログイン</h2>
+        <input type="text" id="username" placeholder="Username (alice)" value="alice">
+        <input type="password" id="password" placeholder="Password (password123)" value="password123">
+        <button onclick="login()">ログイン</button>
+        <button onclick="getProfile()">プロフィール取得</button>
+        <button onclick="logout()">ログアウト</button>
+        <div id="output" class="output" style="display:none;"></div>
+    </div>
+    <script>
+        async function login() {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            const data = await response.json();
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+        async function getProfile() {
+            const response = await fetch('/api/profile');
+            const data = await response.json();
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+        async function logout() {
+            const response = await fetch('/api/logout', { method: 'POST' });
+            const data = await response.json();
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

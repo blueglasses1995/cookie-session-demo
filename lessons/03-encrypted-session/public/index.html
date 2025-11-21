@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 03: セッション暗号化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        .subtitle { color: #666; font-size: 16px; }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: 500; }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; flex: 1; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
+        .btn-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+        .output {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .output.error { border-left-color: #f5576c; background: #fee; color: #c00; }
+        .output.success { border-left-color: #28a745; background: #e8f5e9; color: #155724; }
+        .status-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin-top: 15px;
+        }
+        .status-box.logged-in { background: #d4edda; border-left-color: #28a745; }
+        .status-box.logged-out { background: #f8d7da; border-left-color: #dc3545; }
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+            margin-top: 15px;
+        }
+        .info-box h3 { color: #1976D2; margin-bottom: 10px; font-size: 16px; }
+        .info-box ul { margin-left: 20px; color: #555; }
+        .info-box li { margin-bottom: 5px; }
+        .hidden { display: none; }
+        .size-meter {
+            background: #f0f0f0;
+            height: 30px;
+            border-radius: 5px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .size-meter-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .size-meter-fill.warning { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .size-meter-fill.danger { background: linear-gradient(135deg, #f5576c 0%, #c44569 100%); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Lesson 03: セッションの暗号化</h1>
+            <p class="subtitle">暗号化クッキーセッション（cookie-session）を体験しよう</p>
+        </div>
+
+        <div class="card">
+            <h2>📊 セッションステータス</h2>
+            <div id="status" class="status-box logged-out">
+                <strong>状態:</strong> ログアウト中
+            </div>
+            <div id="session-size-display" class="hidden">
+                <h3 style="margin-top: 15px;">セッションサイズ:</h3>
+                <div class="size-meter">
+                    <div id="size-meter-fill" class="size-meter-fill" style="width: 0%">0%</div>
+                </div>
+                <p id="size-text" style="margin-top: 5px; color: #666;">0 / 4096 bytes</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔐 認証</h2>
+            <div id="login-section">
+                <div class="input-group">
+                    <label for="username">ユーザー名:</label>
+                    <input type="text" id="username" placeholder="alice" value="alice">
+                </div>
+                <div class="input-group">
+                    <label for="password">パスワード:</label>
+                    <input type="password" id="password" placeholder="password123" value="password123">
+                </div>
+                <button class="btn-primary" onclick="login()" style="width: 100%;">🔐 ログイン</button>
+                <div class="info-box" style="margin-top: 15px;">
+                    <h3>💡 テストユーザー:</h3>
+                    <ul>
+                        <li>alice / password123</li>
+                        <li>bob / password456</li>
+                        <li>charlie / password789</li>
+                    </ul>
+                </div>
+            </div>
+            <div id="profile-section" class="hidden">
+                <div id="profile-data" class="output"></div>
+                <div class="button-group" style="margin-top: 15px;">
+                    <button class="btn-secondary" onclick="getProfile()">🔄 更新</button>
+                    <button class="btn-primary" onclick="getSessionInfo()">ℹ️ セッション情報</button>
+                    <button class="btn-danger" onclick="logout()">👋 ログアウト</button>
+                </div>
+            </div>
+            <div id="auth-output" class="output" style="display:none;"></div>
+        </div>
+
+        <div class="card" id="session-data-section" class="hidden">
+            <h2>💾 セッションデータ操作</h2>
+            <div class="input-group">
+                <label for="data-key">キー:</label>
+                <input type="text" id="data-key" placeholder="例: favoriteColor">
+            </div>
+            <div class="input-group">
+                <label for="data-value">値:</label>
+                <input type="text" id="data-value" placeholder="例: blue">
+            </div>
+            <div class="button-group">
+                <button class="btn-success" onclick="setSessionData()">💾 保存</button>
+                <button class="btn-primary" onclick="getAllSessionData()">📚 全て取得</button>
+                <button class="btn-danger" onclick="clearSessionData()">🗑️ データクリア</button>
+            </div>
+            <div id="session-data-output" class="output" style="display:none;"></div>
+        </div>
+
+        <div class="card">
+            <h2>📚 学習ポイント</h2>
+            <div class="info-box">
+                <h3>このレッスンで学べること:</h3>
+                <ul>
+                    <li><strong>暗号化</strong>: セッションデータはAES-256-GCMで暗号化される</li>
+                    <li><strong>クライアント保存</strong>: サーバーメモリ不要、水平スケーリング容易</li>
+                    <li><strong>サイズ制限</strong>: クッキーは約4KBまで</li>
+                    <li><strong>署名</strong>: HMAC-SHA256で改ざん検知</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+
+        function updateStatus(loggedIn, username = null) {
+            isLoggedIn = loggedIn;
+            const statusBox = document.getElementById('status');
+            const loginSection = document.getElementById('login-section');
+            const profileSection = document.getElementById('profile-section');
+            const sessionDataSection = document.getElementById('session-data-section');
+            const sizeDisplay = document.getElementById('session-size-display');
+
+            if (loggedIn) {
+                statusBox.className = 'status-box logged-in';
+                statusBox.innerHTML = `<strong>状態:</strong> ログイン中 (${username})`;
+                loginSection.classList.add('hidden');
+                profileSection.classList.remove('hidden');
+                sessionDataSection.classList.remove('hidden');
+                sizeDisplay.classList.remove('hidden');
+            } else {
+                statusBox.className = 'status-box logged-out';
+                statusBox.innerHTML = '<strong>状態:</strong> ログアウト中';
+                loginSection.classList.remove('hidden');
+                profileSection.classList.add('hidden');
+                sessionDataSection.classList.add('hidden');
+                sizeDisplay.classList.add('hidden');
+            }
+        }
+
+        function updateSizeMeter(bytes) {
+            const maxBytes = 4096;
+            const percentage = (bytes / maxBytes * 100).toFixed(2);
+            const fill = document.getElementById('size-meter-fill');
+            const text = document.getElementById('size-text');
+
+            fill.style.width = percentage + '%';
+            fill.textContent = percentage + '%';
+            text.textContent = `${bytes} / ${maxBytes} bytes`;
+
+            fill.className = 'size-meter-fill';
+            if (percentage > 75) fill.className += ' danger';
+            else if (percentage > 50) fill.className += ' warning';
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const output = document.getElementById('auth-output');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                output.style.display = 'block';
+                if (data.success) {
+                    output.className = 'output success';
+                    output.textContent = JSON.stringify(data, null, 2);
+                    updateStatus(true, username);
+                    updateSizeMeter(data.sessionSize);
+                    await getProfile();
+                } else {
+                    output.className = 'output error';
+                    output.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        async function logout() {
+            const output = document.getElementById('auth-output');
+
+            try {
+                const response = await fetch('/api/logout', { method: 'POST' });
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2);
+                updateStatus(false);
+                document.getElementById('profile-data').textContent = '';
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        async function getProfile() {
+            const output = document.getElementById('profile-data');
+
+            try {
+                const response = await fetch('/api/profile');
+                const data = await response.json();
+
+                if (data.success) {
+                    output.className = 'output success';
+                    output.textContent = JSON.stringify(data, null, 2);
+                    updateSizeMeter(data.sessionSize);
+                } else {
+                    output.className = 'output error';
+                    output.textContent = JSON.stringify(data, null, 2);
+                    updateStatus(false);
+                }
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        async function getSessionInfo() {
+            const output = document.getElementById('auth-output');
+
+            try {
+                const response = await fetch('/api/session/info');
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2);
+
+                if (data.success) {
+                    updateSizeMeter(data.size.bytes);
+                }
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        async function setSessionData() {
+            const key = document.getElementById('data-key').value;
+            const value = document.getElementById('data-value').value;
+            const output = document.getElementById('session-data-output');
+
+            if (!key) {
+                alert('キーを入力してください');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/session/set', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, value })
+                });
+
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = data.success ? 'output success' : 'output error';
+                output.textContent = JSON.stringify(data, null, 2);
+
+                if (data.success) {
+                    updateSizeMeter(data.sessionSize);
+                    await getAllSessionData();
+                }
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        async function getAllSessionData() {
+            const output = document.getElementById('session-data-output');
+
+            try {
+                const response = await fetch('/api/session/all');
+                const data = await response.json();
+
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2);
+
+                if (data.success && data.sessionInfo) {
+                    updateSizeMeter(data.sessionInfo.size);
+                }
+            } catch (error) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = 'エラー: ' + error.message;
+            }
+        }
+
+        async function clearSessionData() {
+            try {
+                const response = await fetch('/api/session/clear-data', { method: 'POST' });
+                const data = await response.json();
+
+                const output = document.getElementById('session-data-output');
+                output.style.display = 'block';
+                output.className = 'output success';
+                output.textContent = JSON.stringify(data, null, 2);
+
+                updateSizeMeter(data.sessionSize);
+                await getAllSessionData();
+            } catch (error) {
+                alert('エラー: ' + error.message);
+            }
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/profile');
+                const data = await response.json();
+
+                if (data.success) {
+                    updateStatus(true, data.user.username);
+                    await getProfile();
+                }
+            } catch (error) {
+                updateStatus(false);
+            }
+        });
+    </script>
+</body>
+</html>
